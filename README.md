@@ -112,10 +112,10 @@ PDF File → Extraction → Transformation → Excel File
 ## Struktur Project
 
 ```
-jasa-raharja-pdf-converter/
+jasaraharja-camelot-converter/
 ├── app.py                # Aplikasi utama
 ├── requirements.txt      # Python dependencies
-├── README.md            # Dokumentasi
+├── README.md             # Dokumentasi
 ```
 
 ---
