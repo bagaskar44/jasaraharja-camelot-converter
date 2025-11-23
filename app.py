@@ -13,8 +13,8 @@ st.set_page_config(
 )
 
 # Header
-st.title("📄 PDF to Excel Converter")
-st.markdown("Konversi tabel dari file PDF ke Excel dengan mudah")
+st.title("📄 Automation Converter")
+st.markdown("Data siap dianalisis dalam satu kali klik!")
 
 # File uploader
 uploaded_file = st.file_uploader(
@@ -48,12 +48,17 @@ if uploaded_file is not None:
     
     # Pilihan mode ekstraksi
     st.markdown("**Mode Ekstraksi:**")
-    flavor = st.radio(
+    flavor_display = st.radio(
         "Pilih metode ekstraksi tabel",
-        ["lattice", "stream"],
+        ["PDF Bergaris", "PDF Teks"],
         help="Lattice: untuk tabel dengan garis pembatas | Stream: untuk tabel tanpa garis",
         horizontal=True
     )
+    
+    if flavor_display == 'PDF Bergaris':
+        flavor = "lattice"
+    else:
+        flavor = "stream"
     
     # Input nama file
     output_filename = st.text_input(
@@ -99,22 +104,32 @@ if uploaded_file is not None:
                     # Buat Excel file di memory
                     output = io.BytesIO()
                     with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                        # Gabungkan semua tabel menjadi satu
+                        all_dfs = []
                         for i, table in enumerate(tables):
-                            sheet_name = f'Table_{i+1}'
                             df = table.df
                             
                             # Baris kedua jadi header
                             df.columns = df.iloc[1] 
                             # Buang baris kedua
                             df = df.drop(index=1).reset_index(drop=True)
+                            
+                            # Dataframe setelah pertama hapus header
+                            if i >= 1:
+                                df = df.drop(df.index[:1])
+                                
                             # Bersihkan kolom kosong
                             df = df.dropna(axis=1, how="all")
                             # Konversi angka
                             for col in df.columns[1:]:
                                 df[col] = df[col].str.replace(",", ".", regex=False)
                                 df[col] = pd.to_numeric(df[col], errors="ignore")
-
-                            df.to_excel(writer, sheet_name=sheet_name, index=False)
+                            
+                            all_dfs.append(df)
+                            
+                        # Gabungkan semua dataframe
+                        combined_df = pd.concat(all_dfs, ignore_index=True)
+                        combined_df.to_excel(writer, sheet_name='All_Tables', index=False)
                     
                     output.seek(0)
                     
